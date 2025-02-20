@@ -12,7 +12,7 @@ from cachetools import TTLCache
 import requests  # Missing import
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 feed_urls = list(set([
     "https://archive.org/services/collection-rss.php?collection=resistancearchive",
