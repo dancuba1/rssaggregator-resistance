@@ -220,20 +220,31 @@ p {
   width: 100%;
 
 }
+
+
 @font-face {
-  font-family: 'archivo-black';
-  src: url('/./public/archivo-black.otf') format('opentype');
+  font-family: 'segoeui';
+  src: url('/./public/segoeuithis.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
 .text-input{
-  height: 100vh;
+  height: 100%;
+  outline: none;
+  font-family: 'segoeui';
+
+  align-items: center;
+}
+
+.search-input{
+  height: 60%;
 }
 .noResults {
   display: flex;
   width: 100%;
   flex: auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   justify-content: center;
   align-items: center;
 }
@@ -259,30 +270,32 @@ p {
   align-items: center;
 }
 .text-search{
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
+  height: 100%;
+  font-family: 'segoeui';
   font-size: 100%;
-
+  outline: none;
 }
 
 
 .search-button{
-  font-family: "archivo-black";
   background-color: rgb(255, 255, 255);
-  -webkit-text-fill-color: rgb(0, 0, 0);
   outline: none;
-
+  height: 100%;
+  border: none;
 }
 
+.search-logo{
+  width: 4vw;
+  height: 100%;
+  
+}
 
 .search-bar{
   display: flex;
   height: 10vh;
   align-items: center;
   flex-direction: row;
+  
   justify-content: center;
 }
 
@@ -293,7 +306,7 @@ p {
   align-items: center;  
 }
 .word-cloud {
-  width: 60vw; /* Or a fixed width like 800px */
+  width: 100vw; /* Or a fixed width like 800px */
   height: 30vh; /* Or a fixed height like 400px */
   display: flex;
   flex-direction: row;

@@ -9,9 +9,9 @@ export function TextInput({query, setQuery, searchFeeds}){
           console.log("found searchfeeds") // Call the function when Enter is pressed
         }
       };
-    return(<div id="text-input">
+    return(<div className="search-input">
         <input
-            id="text-search"
+            className="text-search"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)} // Update query on input

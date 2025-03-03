@@ -74,16 +74,55 @@ def process_entries(feed_data):
     entries = []
     for url, feed in feed_data.items():
         for entry in feed.entries:
+            youtube_tags = []
+            youtube_thumbnail = None
+
+            if "youtube.com" in entry.link:
+                video_id = extract_youtube_video_id(entry.link)
+                print("VIDEO ID     :    " + video_id)
+                if video_id:
+                    youtube_tags = get_youtube_tags(video_id)
+                    youtube_thumbnail = get_youtube_thumbnail(video_id)
             processed_entry = {
                 "title": entry.title,
                 "link": entry.link,
                 "published": datetime(*entry.published_parsed[:6]) if entry.get("published_parsed") else None,
-                "tags": [tag.term for tag in getattr(entry, "tags", [])],
-                "thumbnail": None,
+                "tags": [tag.term for tag in getattr(entry, "tags", [])] + youtube_tags,
+                "thumbnail": youtube_thumbnail if youtube_thumbnail else None,
             }
             #rint("Processed entry:", processed_entry)  # Debug output
             entries.append(processed_entry)
     return sorted(entries, key=lambda x: x["published"], reverse=True)
+
+
+
+def extract_youtube_video_id(url):
+    """Extracts video ID from YouTube URLs"""
+    match = re.search(r"(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/v/|youtube\.com/shorts/)([a-zA-Z0-9_-]{11})", url)
+    return match.group(1) if match else None
+
+YOUTUBE_API_KEY = "AIzaSyCyLv9Mmv0l9C6KAE9lKD_im7WfyFErUaQ"
+
+def get_youtube_tags(video_id):
+    """Fetch YouTube video tags using the API."""
+    if not video_id:
+        return []
+
+    url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={YOUTUBE_API_KEY}"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+      
+
+        if "items" in data and len(data["items"]) > 0:
+            print(data)
+            return data["items"][0]["snippet"].get("tags", [])  # Returns list of tags or empty list
+    except requests.RequestException as e:
+        print(f"Error fetching YouTube tags: {e}")
+
+    return []
 
 def deduplicate(entries):
     seen_links = set()
@@ -129,6 +168,7 @@ def get_flickr_thumbnail(photo_id):
     except requests.RequestException as e:
         print("Error fetching Flickr thumbnail:", e)
         return None
+
     
 
 def clean_query(query):
@@ -223,10 +263,32 @@ def boolean_search(entries, query):
                     thumbnail_url = get_flickr_thumbnail(photo_id)  # Assuming get_flickr_thumbnail is defined
                     if thumbnail_url:
                         entry["thumbnail"] = thumbnail_url
+            elif "youtube.com" in entry["link"] or "you.tube" in entry["link"]:
+                video_id = extract_youtube_video_id(entry["link"])
+                if(video_id):
+                    thumbnail_url = get_youtube_thumbnail(video_id)
+                    if thumbnail_url:
+                        entry["thumbnail"] = thumbnail_url
             results.append(entry)
     print(f"Search results: {results}")  # Debug output
     return results
 
+youtube_thumbnail_cache = TTLCache(maxsize=1000, ttl=3600)  # 3600 seconds = 1 hour
+
+def get_youtube_thumbnail(video_id):
+    if not video_id:
+        return None
+
+    # Check if thumbnail is already cached
+    if video_id in youtube_thumbnail_cache:
+        return youtube_thumbnail_cache[video_id]
+
+    # Generate the thumbnail URL
+    thumbnail_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+    
+    # Cache the result
+    youtube_thumbnail_cache[video_id] = thumbnail_url
+    return thumbnail_url
 
 @app.route("/atom-feed", methods=["GET"])
 def atom_feed():
