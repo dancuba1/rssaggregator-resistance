@@ -91,6 +91,7 @@ def process_and_count_tags():
                                 tag_count[tag] += 1
     # Return the tag counts as a JSON response
     return jsonify(tag_count)
+
 def process_entries(feed_data):
     entries = []
     for url, feed in feed_data.items():

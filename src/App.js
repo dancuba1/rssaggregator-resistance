@@ -16,8 +16,8 @@ function App() {
   useEffect(() => {
     async function getTags() {
       try {
-        //const response = await fetch("https://aggregatorapi.onrender.com/count_tags");
-        const response = await fetch("http://127.0.0.1:5000/count_tags");
+        const response = await fetch("https://aggregatorapi.onrender.com/count_tags");
+        //const response = await fetch("http://127.0.0.1:5000/count_tags");
         if (!response.ok) {
           const errorText = await response.text();
           setError("Failed to fetch tags: " + errorText);
