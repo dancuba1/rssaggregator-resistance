@@ -14,6 +14,7 @@ import requests  # Missing import
 app = Flask(__name__)
 CORS(app)
 
+"""""
 feed_urls = list(set([
     "https://archive.org/services/collection-rss.php?collection=resistancearchive",
     "https://archive.org/services/collection-rss.php?collection=ingabystramstrikingart",
@@ -34,6 +35,26 @@ feed_urls = list(set([
     "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157604586597656&lang=en-us&format=atom",
     "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157604184970480&lang=en-us&format=atom"
 ]))
+"""
+
+
+import os
+print("Current working directory:", os.getcwd())
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+file_name = "feedurls.txt"
+
+def load_feed_urls(file_path="feedurls.txt"):
+    file_path = os.path.join(BASE_DIR, file_name)  # look inside /apis/
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            urls = [line.strip() for line in f if line.strip()]
+        return list(set(urls))  # remove duplicates
+    except FileNotFoundError:
+        print(f"⚠️ Feed URL file '{file_path}' not found. Using empty list.")
+        return []
+
+
+feed_urls = load_feed_urls()
 
 FLICKR_API_KEY = "715d330285540544f7323bc79dd188c2"
 cache = TTLCache(maxsize=100, ttl=3600)  # Cache with 1-hour TTL
