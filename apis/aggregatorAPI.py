@@ -12,7 +12,7 @@ from cachetools import TTLCache
 import requests  # Missing import
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "https://historyofresistance.org"}})
 
 """""
 feed_urls = list(set([

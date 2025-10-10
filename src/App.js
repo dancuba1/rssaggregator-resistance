@@ -21,6 +21,7 @@ function App() {
         if (!response.ok) {
           const errorText = await response.text();
           setError("Failed to fetch tags: " + errorText);
+          console.error("API Error:", errorText);
           return;
         }
         const data = await response.json();
