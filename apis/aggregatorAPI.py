@@ -128,6 +128,7 @@ YOUTUBE_API_KEY = "AIzaSyCyLv9Mmv0l9C6KAE9lKD_im7WfyFErUaQ"
 def get_youtube_tags(video_id):
     """Fetch YouTube video tags using the API."""
     if not video_id:
+        print("Error: No video ID provided.")
         return []
 
     url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={YOUTUBE_API_KEY}"
@@ -136,15 +137,20 @@ def get_youtube_tags(video_id):
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-      
 
         if "items" in data and len(data["items"]) > 0:
-            print(data)
-            return data["items"][0]["snippet"].get("tags", [])  # Returns list of tags or empty list
-    except requests.RequestException as e:
-        print(f"Error fetching YouTube tags: {e}")
+            return data["items"][0]["snippet"].get("tags", [])
+        else:
+            print("Error: No video found or video has no tags.")
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error: {e.response.status_code} - {e.response.reason}")
+    except requests.exceptions.RequestException as e:
+        print(f"Network error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
     return []
+
 
 def deduplicate(entries):
     seen_links = set()
@@ -244,7 +250,7 @@ def parse_query(query):
 
 def evaluate_query(entry, parsed_query):
     tags = {tag.lower().strip() for tag in entry['tags']}
-    print(f"Entry tags (processed): {tags}")
+    #print(f"Entry tags (processed): {tags}")
 
     def evaluate(expression):
         if isinstance(expression, tuple):  # Operator node (AND, OR, NOT)
@@ -263,7 +269,7 @@ def evaluate_query(entry, parsed_query):
         return False  # Handle unexpected types (shouldn't happen)
 
     result = evaluate(parsed_query)
-    print(f"Final query result: {result}")
+    #print(f"Final query result: {result}")
     return result
 
 def boolean_search(entries, query):
