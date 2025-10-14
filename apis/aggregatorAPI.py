@@ -58,6 +58,30 @@ feed_urls = load_feed_urls()
 
 FLICKR_API_KEY = "715d330285540544f7323bc79dd188c2"
 cache = TTLCache(maxsize=100, ttl=3600)  # Cache with 1-hour TTL
+processed_feeds_cache = TTLCache(maxsize=10, ttl=3600)
+
+def get_feed_cache_key(feed_urls):
+    """Generate a hash key for the current feed list."""
+    joined_urls = ",".join(sorted(feed_urls))
+    return hashlib.sha256(joined_urls.encode()).hexdigest()
+
+def get_cached_entries():
+    """Return cached processed entries if available."""
+    cache_key = get_feed_cache_key(feed_urls)
+    if cache_key in processed_feeds_cache:
+        print("✅ Using cached feed entries")
+        return processed_feeds_cache[cache_key]
+    print("⚙️ Cache miss, fetching and processing feeds...")
+
+    # Fetch and process feeds if not cached
+    feed_data = asyncio.run(fetch_feeds_async(feed_urls))
+    entries = process_entries(feed_data)
+    unique_entries = deduplicate(entries)
+
+    # Cache result
+    processed_feeds_cache[cache_key] = unique_entries
+    print(f"💾 Cached {len(unique_entries)} processed entries")
+    return unique_entries
 
 # Async functions
 async def fetch_url(session, url):
@@ -92,28 +116,79 @@ def process_and_count_tags():
     # Return the tag counts as a JSON response
     return jsonify(tag_count)
 
+
+def fetch_youtube_metadata(video_ids):
+    """Fetch tags and thumbnails for a list of YouTube video IDs."""
+    if not video_ids:
+        return {}
+
+    video_metadata = {}
+    BATCH_SIZE = 50  # YouTube API max per request
+
+    for i in range(0, len(video_ids), BATCH_SIZE):
+        batch = video_ids[i:i + BATCH_SIZE]
+        url = (
+            f"https://www.googleapis.com/youtube/v3/videos"
+            f"?part=snippet&id={','.join(batch)}&key={YOUTUBE_API_KEY}"
+        )
+        try:
+            response = requests.get(url, timeout=(3, 5))
+            response.raise_for_status()
+            data = response.json()
+
+            for item in data.get("items", []):
+                vid = item["id"]
+                snippet = item.get("snippet", {})
+                video_metadata[vid] = {
+                    "tags": snippet.get("tags", []),
+                    "thumbnail": snippet.get("thumbnails", {}).get("high", {}).get("url")
+                }
+        except requests.RequestException as e:
+            print(f"Error fetching YouTube metadata batch: {e}")
+
+    return video_metadata
+
 def process_entries(feed_data):
     entries = []
+    youtube_ids = []
+
+    # First pass: collect all YouTube video IDs
+    for url, feed in feed_data.items():
+        for entry in feed.entries:
+            if "youtube.com" in entry.link:
+                video_id = extract_youtube_video_id(entry.link)
+                if video_id:
+                    youtube_ids.append(video_id)
+
+    # Fetch all metadata in batches
+    youtube_metadata = fetch_youtube_metadata(youtube_ids)
+
+    # Second pass: build entries with metadata
     for url, feed in feed_data.items():
         for entry in feed.entries:
             youtube_tags = []
             youtube_thumbnail = None
 
             if "youtube.com" in entry.link:
+                #print(f"Processing YouTube entry: {entry.link}")
                 video_id = extract_youtube_video_id(entry.link)
-                print("VIDEO ID     :    " + video_id)
-                if video_id:
-                    youtube_tags = get_youtube_tags(video_id)
-                    youtube_thumbnail = get_youtube_thumbnail(video_id)
+                if video_id in youtube_metadata:
+                    #print(f"Found in youtube metadata: {entry.link}")
+
+                    meta = youtube_metadata[video_id]
+                    youtube_tags = meta.get("tags", [])
+                    youtube_thumbnail = meta.get("thumbnail")
+
             processed_entry = {
                 "title": entry.title,
                 "link": entry.link,
                 "published": datetime(*entry.published_parsed[:6]) if entry.get("published_parsed") else None,
                 "tags": [tag.term for tag in getattr(entry, "tags", [])] + youtube_tags,
-                "thumbnail": youtube_thumbnail if youtube_thumbnail else None,
+                "thumbnail": youtube_thumbnail,
             }
-            #rint("Processed entry:", processed_entry)  # Debug output
+
             entries.append(processed_entry)
+
     return sorted(entries, key=lambda x: x["published"], reverse=True)
 
 
@@ -134,7 +209,7 @@ def get_youtube_tags(video_id):
     url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={YOUTUBE_API_KEY}"
     
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=5)  # Add timeout to avoid hanging
         response.raise_for_status()
         data = response.json()
 
@@ -165,11 +240,10 @@ def deduplicate(entries):
 def search():
     print("In search")
     query = request.args.get("query", "")
-    feed_data = asyncio.run(fetch_feeds_async(feed_urls))
-    entries = process_entries(feed_data)
-    unique_entries = deduplicate(entries)
-    results = boolean_search(unique_entries, query)  
+    entries = get_cached_entries()  # ✅ Now uses cache
+    results = boolean_search(entries, query)
     return jsonify(results)
+
 
 def extract_photo_id(flickr_url):
     """Extract photo ID from a Flickr URL."""
