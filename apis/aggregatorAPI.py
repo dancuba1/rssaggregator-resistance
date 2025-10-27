@@ -3,13 +3,15 @@ from collections import defaultdict
 from datetime import datetime
 import feedparser
 import aiohttp
+from apscheduler.schedulers.background import BackgroundScheduler
 import asyncio
 from xml.etree.ElementTree import Element, SubElement, tostring
 from flask_cors import CORS
 import re
 import hashlib
 from cachetools import TTLCache
-import requests  # Missing import
+import requests 
+import time
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -42,6 +44,30 @@ import os
 print("Current working directory:", os.getcwd())
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 file_name = "feedurls.txt"
+
+
+
+
+
+# ---- Heavy computation ----
+def compute_tag_counts():
+    global tag_cache, last_update_time
+    print("🔄 Recomputing tag counts...")
+    feed_data = asyncio.run(fetch_feeds_async(feed_urls))
+
+    tag_count = defaultdict(int)
+    for url, feed in feed_data.items():
+        for entry in feed.get("entries", []):
+            tags = [tag["term"] for tag in entry.get("tags", [])]
+            for tag in tags:
+                if not (tag.startswith("texts/") or tag.startswith("image/")):
+                    tag_count[tag] += 1
+
+    tag_cache = dict(tag_count)
+    last_update_time = time.time()
+    print(f"✅ Tag cache updated with {len(tag_cache)} tags.")
+
+
 
 def load_feed_urls(file_path="feedurls.txt"):
     file_path = os.path.join(BASE_DIR, file_name)  # look inside /apis/
@@ -100,21 +126,9 @@ async def fetch_feeds_async(urls):
 
 @app.route("/count_tags", methods=["GET"])
 def process_and_count_tags():
-    """Process feed data and return a dictionary of tag counts."""
-    # Fetch feed data asynchronously
-    feed_data = asyncio.run(fetch_feeds_async(feed_urls)); # Replace with your actual feed URLs
-    
-    tag_count = defaultdict(int)
-    
-    # Process feed data
-    for url, feed in feed_data.items():
-        for entry in feed.get("entries", []):
-            tags = [tag["term"] for tag in entry.get("tags", [])]
-            for tag in tags:
-                if not (tag.startswith("texts/") or tag.startswith("image/")):
-                                tag_count[tag] += 1
-    # Return the tag counts as a JSON response
-    return jsonify(tag_count)
+    if not tag_cache:
+        compute_tag_counts()  # first-time warm-up
+    return jsonify(tag_cache)
 
 
 def fetch_youtube_metadata(video_ids):
@@ -405,6 +419,23 @@ def atom_feed():
         SubElement(entry_element, "published").text = entry["published"].isoformat() if entry["published"] else ""
     atom_xml = tostring(feed, encoding="utf-8").decode("utf-8")
     return atom_xml, 200, {"Content-Type": "application/atom+xml"}
+
+
+tag_cache = {}
+last_update_time = 0
+
+# ---- Background scheduler ----
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=compute_tag_counts, trigger="interval", hours=24)
+scheduler.start()
+
+
+
+
+
+# ---- Graceful shutdown ----
+import atexit
+atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == "__main__":
     app.run(debug=True)
