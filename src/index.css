@@ -1,16 +1,9 @@
-@font-face {
-  font-family: 'archivo-black';
-  src: url('/./public/archivo-black.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
+
 
 body {
   margin: 0;
   background-color: #ffffff;
-  font-family: 'archivo-black', 'Segoe UI', 'Roboto', 'Oxygen', 
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 
-    sans-serif;
+  font-family: sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

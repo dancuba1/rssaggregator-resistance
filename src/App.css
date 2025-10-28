@@ -222,31 +222,27 @@ p {
 }
 
 
-@font-face {
-  font-family: 'segoeui';
-  src: url('/./public/segoeuithis.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
 
 .text-input{
   height: 100%;
   width: 100%;
+  padding: 0 10px; /* Add some spacing inside */
+
   outline: none;
-  font-family: 'segoeui';
   align-items: center;
 }
 
 .search-input{
   height: fit-content;
   outline: none;
-  width: 30vw;
+  width: 40vw;
+  display: flex;
 }
 .noResults {
   display: flex;
   width: 100%;
   flex: auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: sans-serif;
   justify-content: center;
   align-items: center;
 }
@@ -281,12 +277,12 @@ p {
   justify-content: center;
   align-items: center;
 }
-.text-search{
-  height: 5vh;
-  font-family: 'segoeui';
-  font-size: 100%;
-  outline: none;
-  border: none;
+.text-search {
+  width: 100%; /* Fill the container */
+  height: 40px; /* Adjust for your design */
+  padding: 0 10px; /* Add some spacing inside */
+  font-size: 1rem;
+  box-sizing: border-box; /* ensures padding doesn't overflow */
 }
 
 
