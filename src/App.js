@@ -17,8 +17,8 @@ function App() {
     async function getTags() {
       try {
         
-        //const response = await fetch("https://aggregatorapi.onrender.com/count_tags");
-        const response = await fetch("http://127.0.0.1:5000/count_tags");
+        const response = await fetch("https://aggregatorapi.onrender.com/count_tags");
+        //const response = await fetch("http://127.0.0.1:5000/count_tags");
         if (!response.ok) {
           const errorText = await response.text();
           setError("Failed to fetch tags: " + errorText);
@@ -45,8 +45,8 @@ function App() {
     setArticles([{},{},{}]); 
 
     try {
-      //const response = await fetch(`https://aggregatorapi.onrender.com/search?query=${encodeURIComponent(query)}`);
-      const response = await fetch(`http://127.0.0.1:5000/search?query=${encodeURIComponent(query)}`);
+      const response = await fetch(`https://aggregatorapi.onrender.com/search?query=${encodeURIComponent(query)}`);
+      //const response = await fetch(`http://127.0.0.1:5000/search?query=${encodeURIComponent(query)}`);
       if (!response.ok) {
         console.error("API Error:", await response.text());
         return;
@@ -80,7 +80,8 @@ function App() {
       <div className="search-bar">
         <TextInput className="search-input" query={query} setQuery={setQuery} searchFeeds={searchFeeds} />
         <button className="search-button" onClick={searchFeeds}>
-          <img className ="search-logo" src="/search.svg" alt="Search" />
+          <img className="search-svg" src="/wp-content/uploads/search.svg" alt="Search" />
+
         </button>
       </div>
       {noResults ? (

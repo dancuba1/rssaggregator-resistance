@@ -306,6 +306,12 @@ def boolean_search(entries, query):
     return results
 
 # ---- Flask routes ----
+
+#keepalive route
+@app.route("/health")
+def health():
+    return "OK", 200
+
 @app.route("/count_tags")
 def count_tags():
     if r:
