@@ -18,3 +18,4 @@ https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157604
 https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157604184970480&lang=en-us&format=atom
 https://archive.org/services/collection-rss.php?query=creator:Spirit_of_Revolt
 https://archive.org/services/collection-rss.php?query=creator:Davina_Thomson
+https://archive.org/services/collection-rss.php?query=creator:Do_or_Die_Collective
