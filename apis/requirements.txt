@@ -5,3 +5,5 @@ aiohttp
 requests
 feedparser
 cachetools
+APScheduler
+redis

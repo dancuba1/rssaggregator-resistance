@@ -3,93 +3,74 @@ from collections import defaultdict
 from datetime import datetime
 import feedparser
 import aiohttp
+from apscheduler.schedulers.background import BackgroundScheduler
 import asyncio
 from xml.etree.ElementTree import Element, SubElement, tostring
 from flask_cors import CORS
 import re
 import hashlib
 from cachetools import TTLCache
-import requests  # Missing import
+import requests
+import time
+import redis
+import os
+import json
+import atexit
+import logging
+
+# ---- Logging setup ----
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-"""""
-feed_urls = list(set([
-    "https://archive.org/services/collection-rss.php?collection=resistancearchive",
-    "https://archive.org/services/collection-rss.php?collection=ingabystramstrikingart",
-    "https://archive.org/services/collection-rss.php?query=subject:Chiara_Contrino",
-    "https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3iLGuSVVeri7ZEfud_j-su",
-    "https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX0PzadF1L72XBw8mLpejzrY",
-    "https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX21XJ7pjAWCaJKThHXOWPjb",
-    "https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX375LTWGoOIHgDty4Cs6agg",
-    "https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3Bi3orWOkZRiPa7m7wKbRL",
-    "https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3lpMK8PoZTke2DsYbqCJMZ",
-    "https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX0yx5BL-sFjGu3bZIEKmnNq",
-    "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157623673144706&lang=en-us&format=atom",
-    "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157692538977302&lang=en-us&format=atom",
-    "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157600354803923&lang=en-us&format=atom",
-    "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157600356404760&lang=en-us&format=atom",
-    "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157600357938530&lang=en-us&format=atom",
-    "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157604489309701&lang=en-us&format=atom",
-    "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157604586597656&lang=en-us&format=atom",
-    "https://www.flickr.com/services/feeds/photoset.gne?nsid=8933893@N08&set=72157604184970480&lang=en-us&format=atom"
-]))
-"""
-
-
-import os
-print("Current working directory:", os.getcwd())
+# ---- Config ----
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-file_name = "feedurls.txt"
+FEED_FILE = "feedurls.txt"
+#YOUTUBE_API_KEY = "AIzaSyCyLv9Mmv0l9C6KAE9lKD_im7WfyFErUaQ"
+#FLICKR_API_KEY = "715d330285540544f7323bc79dd188c2"
+#REDIS_URL = "redis://default:AUfZAAIncDI4ZTczNWJlMDA4NzI0MzJmODY1NTg3Y2NjMmRmN2NjZHAyMTgzOTM@topical-mastodon-18393.upstash.io:6379"
 
-def load_feed_urls(file_path="feedurls.txt"):
-    file_path = os.path.join(BASE_DIR, file_name)  # look inside /apis/
+
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
+FLICKR_API_KEY = os.getenv("FLICKR_API_KEY")
+REDIS_URL = os.getenv("REDIS_URL")
+
+# ---- Redis ----
+try:
+    r = redis.from_url(REDIS_URL, decode_responses=True) if REDIS_URL else None
+    r.ping()  # Test connection
+except redis.ConnectionError:
+    logger.warning("⚠️ Could not connect to Redis. Falling back to in-memory cache.")
+    r = None
+# ---- Caches ----
+tag_cache = {}
+last_update_time = 0
+cache = TTLCache(maxsize=100, ttl=3600)
+processed_feeds_cache = TTLCache(maxsize=10, ttl=3600)
+youtube_thumbnail_cache = TTLCache(maxsize=1000, ttl=3600)
+
+# ---- Load feeds ----
+def load_feed_urls(file_path=FEED_FILE):
+    file_path = os.path.join(BASE_DIR, file_path)
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             urls = [line.strip() for line in f if line.strip()]
-        return list(set(urls))  # remove duplicates
+        return list(set(urls))
     except FileNotFoundError:
-        print(f"⚠️ Feed URL file '{file_path}' not found. Using empty list.")
-        return []
-
+        logger.warning(f"Feed URL file '{file_path}' not found. Using default feed.")
+        return ["https://archive.org/services/collection-rss.php?collection=resistancearchive"]
 
 feed_urls = load_feed_urls()
 
-FLICKR_API_KEY = "715d330285540544f7323bc79dd188c2"
-cache = TTLCache(maxsize=100, ttl=3600)  # Cache with 1-hour TTL
-processed_feeds_cache = TTLCache(maxsize=10, ttl=3600)
-
-def get_feed_cache_key(feed_urls):
-    """Generate a hash key for the current feed list."""
-    joined_urls = ",".join(sorted(feed_urls))
-    return hashlib.sha256(joined_urls.encode()).hexdigest()
-
-def get_cached_entries():
-    """Return cached processed entries if available."""
-    cache_key = get_feed_cache_key(feed_urls)
-    if cache_key in processed_feeds_cache:
-        print("✅ Using cached feed entries")
-        return processed_feeds_cache[cache_key]
-    print("⚙️ Cache miss, fetching and processing feeds...")
-
-    # Fetch and process feeds if not cached
-    feed_data = asyncio.run(fetch_feeds_async(feed_urls))
-    entries = process_entries(feed_data)
-    unique_entries = deduplicate(entries)
-
-    # Cache result
-    processed_feeds_cache[cache_key] = unique_entries
-    print(f"💾 Cached {len(unique_entries)} processed entries")
-    return unique_entries
-
-# Async functions
+# ---- Async feed fetching ----
 async def fetch_url(session, url):
     try:
-        async with session.get(url, timeout=10) as response:
-            return url, await response.text()
+        async with session.get(url, timeout=10) as resp:
+            return url, await resp.text()
     except Exception as e:
-        print(f"Error fetching {url}: {e}")
+        logger.warning(f"Error fetching {url}: {e}")
         return url, None
 
 async def fetch_feeds_async(urls):
@@ -98,44 +79,114 @@ async def fetch_feeds_async(urls):
         responses = await asyncio.gather(*tasks)
         return {url: feedparser.parse(content) for url, content in responses if content}
 
-@app.route("/count_tags", methods=["GET"])
-def process_and_count_tags():
-    """Process feed data and return a dictionary of tag counts."""
-    # Fetch feed data asynchronously
-    feed_data = asyncio.run(fetch_feeds_async(feed_urls)); # Replace with your actual feed URLs
-    
-    tag_count = defaultdict(int)
-    
-    # Process feed data
-    for url, feed in feed_data.items():
-        for entry in feed.get("entries", []):
-            tags = [tag["term"] for tag in entry.get("tags", [])]
-            for tag in tags:
-                if not (tag.startswith("texts/") or tag.startswith("image/")):
-                                tag_count[tag] += 1
-    # Return the tag counts as a JSON response
-    return jsonify(tag_count)
+# ---- Compute tag counts ----
+def compute_tag_counts():
+    global tag_cache, last_update_time
+    logger.info("🔄 Recomputing tag counts...")
+    try:
+        loop = asyncio.get_event_loop()
+        feed_data = loop.run_until_complete(fetch_feeds_async(feed_urls))
+    except RuntimeError:  # No running event loop
+        feed_data = asyncio.run(fetch_feeds_async(feed_urls))
 
+    tag_count = defaultdict(int)
+    for feed in feed_data.values():
+        for entry in feed.get("entries", []):
+            for tag in [t["term"] for t in entry.get("tags", [])]:
+                if not tag.startswith(("texts/", "image/")):
+                    tag_count[tag] += 1
+
+    tag_cache = dict(tag_count)
+    last_update_time = time.time()
+    logger.info(f"✅ Tag cache updated with {len(tag_cache)} tags.")
+
+    if r:
+        try:
+            r.setex("tags", 86400, json.dumps(tag_cache))
+            logger.info("💾 Redis cache refreshed.")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not update Redis: {e}")
+
+    return tag_cache
+
+# ---- Cached entries ----
+def get_feed_cache_key(feed_urls):
+    joined_urls = ",".join(sorted(feed_urls))
+    return hashlib.sha256(joined_urls.encode()).hexdigest()
+
+def get_cached_entries():
+    cache_key = get_feed_cache_key(feed_urls)
+    if cache_key in processed_feeds_cache:
+        logger.info("✅ Using cached feed entries")
+        return processed_feeds_cache[cache_key]
+
+    logger.info("⚙️ Cache miss, fetching feeds...")
+    try:
+        loop = asyncio.get_event_loop()
+        feed_data = loop.run_until_complete(fetch_feeds_async(feed_urls))
+    except RuntimeError:
+        feed_data = asyncio.run(fetch_feeds_async(feed_urls))
+
+    entries = process_entries(feed_data)
+    unique_entries = deduplicate(entries)
+    processed_feeds_cache[cache_key] = unique_entries
+    logger.info(f"💾 Cached {len(unique_entries)} processed entries")
+    return unique_entries
+
+# ---- Entry processing ----
+def process_entries(feed_data):
+    entries = []
+    youtube_ids = []
+
+    # Collect YouTube IDs
+    for feed in feed_data.values():
+        for entry in feed.entries:
+            if "youtube.com" in entry.link:
+                vid = extract_youtube_video_id(entry.link)
+                if vid:
+                    youtube_ids.append(vid)
+
+    # Fetch YouTube metadata
+    youtube_metadata = fetch_youtube_metadata(youtube_ids)
+
+    for feed in feed_data.values():
+        for entry in feed.entries:
+            youtube_tags, youtube_thumb = [], None
+            if "youtube.com" in entry.link:
+                vid = extract_youtube_video_id(entry.link)
+                if vid and vid in youtube_metadata:
+                    meta = youtube_metadata[vid]
+                    youtube_tags = meta.get("tags", [])
+                    youtube_thumb = meta.get("thumbnail")
+
+            processed_entry = {
+                "title": entry.title,
+                "link": entry.link,
+                "published": datetime(*entry.published_parsed[:6]) if entry.get("published_parsed") else None,
+                "tags": [t.term for t in getattr(entry, "tags", [])] + youtube_tags,
+                "thumbnail": youtube_thumb,
+            }
+            entries.append(processed_entry)
+
+    return sorted(entries, key=lambda x: x["published"], reverse=True)
+
+# ---- YouTube helpers ----
+def extract_youtube_video_id(url):
+    match = re.search(r"(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/v/|youtube\.com/shorts/)([a-zA-Z0-9_-]{11})", url)
+    return match.group(1) if match else None
 
 def fetch_youtube_metadata(video_ids):
-    """Fetch tags and thumbnails for a list of YouTube video IDs."""
-    if not video_ids:
+    if not video_ids or not YOUTUBE_API_KEY:
         return {}
-
     video_metadata = {}
-    BATCH_SIZE = 50  # YouTube API max per request
-
+    BATCH_SIZE = 50
     for i in range(0, len(video_ids), BATCH_SIZE):
-        batch = video_ids[i:i + BATCH_SIZE]
-        url = (
-            f"https://www.googleapis.com/youtube/v3/videos"
-            f"?part=snippet&id={','.join(batch)}&key={YOUTUBE_API_KEY}"
-        )
+        batch = video_ids[i:i+BATCH_SIZE]
+        url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet&id={','.join(batch)}&key={YOUTUBE_API_KEY}"
         try:
-            response = requests.get(url, timeout=(3, 5))
-            response.raise_for_status()
-            data = response.json()
-
+            resp = requests.get(url, timeout=(3,5))
+            resp.raise_for_status()
+            data = resp.json()
             for item in data.get("items", []):
                 vid = item["id"]
                 snippet = item.get("snippet", {})
@@ -144,267 +195,168 @@ def fetch_youtube_metadata(video_ids):
                     "thumbnail": snippet.get("thumbnails", {}).get("high", {}).get("url")
                 }
         except requests.RequestException as e:
-            print(f"Error fetching YouTube metadata batch: {e}")
-
+            logger.warning(f"YouTube metadata error: {e}")
     return video_metadata
-
-def process_entries(feed_data):
-    entries = []
-    youtube_ids = []
-
-    # First pass: collect all YouTube video IDs
-    for url, feed in feed_data.items():
-        for entry in feed.entries:
-            if "youtube.com" in entry.link:
-                video_id = extract_youtube_video_id(entry.link)
-                if video_id:
-                    youtube_ids.append(video_id)
-
-    # Fetch all metadata in batches
-    youtube_metadata = fetch_youtube_metadata(youtube_ids)
-
-    # Second pass: build entries with metadata
-    for url, feed in feed_data.items():
-        for entry in feed.entries:
-            youtube_tags = []
-            youtube_thumbnail = None
-
-            if "youtube.com" in entry.link:
-                #print(f"Processing YouTube entry: {entry.link}")
-                video_id = extract_youtube_video_id(entry.link)
-                if video_id in youtube_metadata:
-                    #print(f"Found in youtube metadata: {entry.link}")
-
-                    meta = youtube_metadata[video_id]
-                    youtube_tags = meta.get("tags", [])
-                    youtube_thumbnail = meta.get("thumbnail")
-
-            processed_entry = {
-                "title": entry.title,
-                "link": entry.link,
-                "published": datetime(*entry.published_parsed[:6]) if entry.get("published_parsed") else None,
-                "tags": [tag.term for tag in getattr(entry, "tags", [])] + youtube_tags,
-                "thumbnail": youtube_thumbnail,
-            }
-
-            entries.append(processed_entry)
-
-    return sorted(entries, key=lambda x: x["published"], reverse=True)
-
-
-
-def extract_youtube_video_id(url):
-    """Extracts video ID from YouTube URLs"""
-    match = re.search(r"(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/v/|youtube\.com/shorts/)([a-zA-Z0-9_-]{11})", url)
-    return match.group(1) if match else None
-
-YOUTUBE_API_KEY = "AIzaSyCyLv9Mmv0l9C6KAE9lKD_im7WfyFErUaQ"
-
-def get_youtube_tags(video_id):
-    """Fetch YouTube video tags using the API."""
-    if not video_id:
-        print("Error: No video ID provided.")
-        return []
-
-    url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={YOUTUBE_API_KEY}"
-    
-    try:
-        response = requests.get(url, timeout=5)  # Add timeout to avoid hanging
-        response.raise_for_status()
-        data = response.json()
-
-        if "items" in data and len(data["items"]) > 0:
-            return data["items"][0]["snippet"].get("tags", [])
-        else:
-            print("Error: No video found or video has no tags.")
-    except requests.exceptions.HTTPError as e:
-        print(f"HTTP error: {e.response.status_code} - {e.response.reason}")
-    except requests.exceptions.RequestException as e:
-        print(f"Network error: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-
-    return []
-
-
-def deduplicate(entries):
-    seen_links = set()
-    unique_entries = []
-    for entry in entries:
-        if entry["link"] not in seen_links:
-            seen_links.add(entry["link"])
-            unique_entries.append(entry)
-    return unique_entries
-
-@app.route("/search", methods=["GET"])
-def search():
-    print("In search")
-    query = request.args.get("query", "")
-    entries = get_cached_entries()  # ✅ Now uses cache
-    results = boolean_search(entries, query)
-    return jsonify(results)
-
-
-def extract_photo_id(flickr_url):
-    """Extract photo ID from a Flickr URL."""
-    match = re.search(r'flickr\.com/photos/[^/]+/(\d+)', flickr_url)
-    return match.group(1) if match else None
-
-def get_flickr_thumbnail(photo_id):
-    """Fetch the thumbnail for a Flickr photo."""
-    if not photo_id:  # Ensure valid photo ID
-        return None
-
-    try:
-        api_url = f"https://www.flickr.com/services/rest/?method=flickr.photos.getSizes&api_key={FLICKR_API_KEY}&photo_id={photo_id}&format=json&nojsoncallback=1"
-        response = requests.get(api_url, timeout=5)  # Add timeout
-        response.raise_for_status()  # Handle HTTP errors
-        data = response.json()
-        if data.get("stat") != "ok":
-            return None
-        
-        # Look for the 'Small' size thumbnail
-        sizes = data.get("sizes", {}).get("size", [])
-        thumbnail = next((size for size in sizes if size["label"] == "Small"), None)
-        return thumbnail["source"] if thumbnail else None
-    except requests.RequestException as e:
-        print("Error fetching Flickr thumbnail:", e)
-        return None
-
-    
-
-def clean_query(query):
-    cleaned_query = re.sub(r'[^\w\s\-"()|,]', '', query).strip()  # Escaped hyphen
-    cleaned_query = cleaned_query.replace("(", " ( ").replace(")", " ) ").replace(",", " , ").replace("|", " | ").replace("-", " - ")  # Add spaces around operators
-    cleaned_query = " ".join(cleaned_query.split()) #remove extra spaces
-    print(f"Cleaned query: {cleaned_query}")
-    return cleaned_query.lower()  
-
-
-def parse_query(query):
-    query = clean_query(query)
-    tokens = re.findall(r'"[^"]+"|\S+|\(|\)|,|\||-', query)  # Correct regex to handle quotes
-    print(f"Tokens: {tokens}")
-
-
-    def parse_expression(tokens):
-        expression = parse_term(tokens)
-        while tokens and tokens[0] == '|':
-            tokens.pop(0)  # Consume '|'
-            right = parse_term(tokens)
-            expression = ('|', expression, right)  # Create OR node in the tree
-        return expression
-
-    def parse_term(tokens):
-        term = parse_factor(tokens)
-        while tokens and tokens[0] == ',':
-            tokens.pop(0)  # Consume ','
-            right = parse_factor(tokens)
-            term = (',', term, right)  # Create AND node in the tree
-        return term  # Crucial: Return the term, even if no ',' was found
-
-    def parse_factor(tokens):
-        if tokens and tokens[0] == '(':
-            tokens.pop(0)  # Consume '('
-            expression = parse_expression(tokens)
-            tokens.pop(0)  # Consume ')'
-            return expression
-        elif tokens and tokens[0] == '-':
-            tokens.pop(0)  # Consume '-'
-            factor = parse_factor(tokens)  # Recursively parse the factor after '-'
-            return ('-', factor)  # Correctly create the NOT node
-        elif tokens:
-            term = tokens.pop(0)
-            return term.strip('"').lower()  # Term
-        return None
-
-    parsed_query = parse_expression(tokens)
-    print(f"Parsed expression tree: {parsed_query}")  # Debug print
-    return parsed_query
-
-def evaluate_query(entry, parsed_query):
-    tags = {tag.lower().strip() for tag in entry['tags']}
-    #print(f"Entry tags (processed): {tags}")
-
-    def evaluate(expression):
-        if isinstance(expression, tuple):  # Operator node (AND, OR, NOT)
-            op = expression[0]
-            if op == '-':  # NOT
-                return not evaluate(expression[1])
-            else:  # AND or OR
-                left = evaluate(expression[1])
-                right = evaluate(expression[2])
-                if op == '|':
-                    return left or right
-                elif op == ',':
-                    return left and right
-        elif isinstance(expression, str):  # Term
-            return expression in tags
-        return False  # Handle unexpected types (shouldn't happen)
-
-    result = evaluate(parsed_query)
-    #print(f"Final query result: {result}")
-    return result
-
-def boolean_search(entries, query):
-    """Perform boolean search on entries based on the query."""
-    print(f"Starting boolean search for query: {query}") # Debug print
-    parsed_query = parse_query(query)
-
-    results = []
-    for entry in entries:
-        if evaluate_query(entry, parsed_query):
-            # Thumbnail logic (unchanged)
-            if "archive.org/details" in entry["link"]:
-                item_id = entry["link"].split("/")[-1]
-                thumbnail_url = f"https://archive.org/services/img/{item_id}"
-                entry["thumbnail"] = thumbnail_url
-            elif "flickr.com" in entry["link"]:
-                photo_id = extract_photo_id(entry["link"])  # Assuming extract_photo_id is defined
-                if photo_id:
-                    thumbnail_url = get_flickr_thumbnail(photo_id)  # Assuming get_flickr_thumbnail is defined
-                    if thumbnail_url:
-                        entry["thumbnail"] = thumbnail_url
-            elif "youtube.com" in entry["link"] or "you.tube" in entry["link"]:
-                video_id = extract_youtube_video_id(entry["link"])
-                if(video_id):
-                    thumbnail_url = get_youtube_thumbnail(video_id)
-                    if thumbnail_url:
-                        entry["thumbnail"] = thumbnail_url
-            results.append(entry)
-    print(f"Search results: {results}")  # Debug output
-    return results
-
-youtube_thumbnail_cache = TTLCache(maxsize=1000, ttl=3600)  # 3600 seconds = 1 hour
 
 def get_youtube_thumbnail(video_id):
     if not video_id:
         return None
-
-    # Check if thumbnail is already cached
     if video_id in youtube_thumbnail_cache:
         return youtube_thumbnail_cache[video_id]
+    url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+    youtube_thumbnail_cache[video_id] = url
+    return url
 
-    # Generate the thumbnail URL
-    thumbnail_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
-    
-    # Cache the result
-    youtube_thumbnail_cache[video_id] = thumbnail_url
-    return thumbnail_url
+# ---- Flickr helpers ----
+def extract_photo_id(url):
+    match = re.search(r'flickr\.com/photos/[^/]+/(\d+)', url)
+    return match.group(1) if match else None
 
-@app.route("/atom-feed", methods=["GET"])
+def get_flickr_thumbnail(photo_id):
+    if not photo_id or not FLICKR_API_KEY:
+        return None
+    try:
+        api_url = f"https://www.flickr.com/services/rest/?method=flickr.photos.getSizes&api_key={FLICKR_API_KEY}&photo_id={photo_id}&format=json&nojsoncallback=1"
+        resp = requests.get(api_url, timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("stat") != "ok":
+            return None
+        sizes = data.get("sizes", {}).get("size", [])
+        thumb = next((s for s in sizes if s["label"]=="Small"), None)
+        return thumb["source"] if thumb else None
+    except requests.RequestException as e:
+        logger.warning(f"Flickr thumbnail error: {e}")
+        return None
+
+# ---- Deduplicate ----
+def deduplicate(entries):
+    seen = set()
+    unique = []
+    for e in entries:
+        if e["link"] not in seen:
+            seen.add(e["link"])
+            unique.append(e)
+    return unique
+
+# ---- Boolean search ----
+def clean_query(query):
+    q = re.sub(r'[^\w\s\-"()|,]', '', query).strip()
+    q = q.replace("(", " ( ").replace(")", " ) ").replace(",", " , ").replace("|", " | ").replace("-", " - ")
+    return " ".join(q.split()).lower()
+
+def parse_query(query):
+    query = clean_query(query)
+    tokens = re.findall(r'"[^"]+"|\S+|\(|\)|,|\||-', query)
+
+    def parse_expr(tokens):
+        expr = parse_term(tokens)
+        while tokens and tokens[0]=='|':
+            tokens.pop(0)
+            expr = ('|', expr, parse_term(tokens))
+        return expr
+    def parse_term(tokens):
+        term = parse_factor(tokens)
+        while tokens and tokens[0]==',':
+            tokens.pop(0)
+            term = (',', term, parse_factor(tokens))
+        return term
+    def parse_factor(tokens):
+        if tokens and tokens[0]=='(':
+            tokens.pop(0)
+            expr = parse_expr(tokens)
+            tokens.pop(0)
+            return expr
+        elif tokens and tokens[0]=='-':
+            tokens.pop(0)
+            return ('-', parse_factor(tokens))
+        elif tokens:
+            return tokens.pop(0).strip('"').lower()
+        return None
+    return parse_expr(tokens)
+
+def evaluate_query(entry, parsed_query):
+    tags = {t.lower().strip() for t in entry['tags']}
+    def eval_expr(expr):
+        if isinstance(expr, tuple):
+            op = expr[0]
+            if op=='-': return not eval_expr(expr[1])
+            left, right = eval_expr(expr[1]), eval_expr(expr[2])
+            return left or right if op=='|' else left and right
+        elif isinstance(expr, str):
+            return expr in tags
+        return False
+    return eval_expr(parsed_query)
+
+def boolean_search(entries, query):
+    parsed = parse_query(query)
+    results = []
+    for e in entries:
+        if evaluate_query(e, parsed):
+            # Thumbnails
+            if "archive.org/details" in e["link"]:
+                e["thumbnail"] = f"https://archive.org/services/img/{e['link'].split('/')[-1]}"
+            elif "flickr.com" in e["link"]:
+                pid = extract_photo_id(e["link"])
+                if pid: e["thumbnail"] = get_flickr_thumbnail(pid)
+            elif "youtube.com" in e["link"] or "you.tube" in e["link"]:
+                vid = extract_youtube_video_id(e["link"])
+                if vid: e["thumbnail"] = get_youtube_thumbnail(vid)
+            results.append(e)
+    return results
+
+# ---- Flask routes ----
+
+#keepalive route
+@app.route("/health")
+def health():
+    return "OK", 200
+
+@app.route("/count_tags")
+def count_tags():
+    if r:
+        cached = r.get("tags")
+        if cached: return jsonify(json.loads(cached))
+    tags = compute_tag_counts()
+    return jsonify(tags)
+
+@app.route("/search")
+def search():
+    query = request.args.get("query", "")
+    entries = get_cached_entries()
+    return jsonify(boolean_search(entries, query))
+
+@app.route("/atom-feed")
 def atom_feed():
-    feed_data = asyncio.run(fetch_feeds_async(feed_urls))
+    try:
+        loop = asyncio.get_event_loop()
+        feed_data = loop.run_until_complete(fetch_feeds_async(feed_urls))
+    except RuntimeError:
+        feed_data = asyncio.run(fetch_feeds_async(feed_urls))
     entries = process_entries(feed_data)
+
     feed = Element("feed", xmlns="http://www.w3.org/2005/Atom")
     SubElement(feed, "title").text = "Aggregated Feed"
-    for entry in entries:
-        entry_element = SubElement(feed, "entry")
-        SubElement(entry_element, "title").text = entry["title"]
-        SubElement(entry_element, "link", href=entry["link"])
-        SubElement(entry_element, "published").text = entry["published"].isoformat() if entry["published"] else ""
-    atom_xml = tostring(feed, encoding="utf-8").decode("utf-8")
-    return atom_xml, 200, {"Content-Type": "application/atom+xml"}
+    for e in entries:
+        entry_el = SubElement(feed, "entry")
+        SubElement(entry_el, "title").text = e["title"]
+        SubElement(entry_el, "link", href=e["link"])
+        SubElement(entry_el, "published").text = e["published"].isoformat() if e["published"] else ""
+    return tostring(feed, encoding="utf-8").decode("utf-8"), 200, {"Content-Type": "application/atom+xml"}
 
+# ---- Scheduler ----
+scheduler = BackgroundScheduler()
+
+# ---- Scheduler ----
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=compute_tag_counts, trigger="interval", hours=24)
+scheduler.start()
+logger.info("✅ Scheduler started")
+
+atexit.register(lambda: scheduler.shutdown())
+
+
+
+# ---- Main ----
 if __name__ == "__main__":
     app.run(debug=True)
