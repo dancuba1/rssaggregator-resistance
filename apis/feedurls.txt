@@ -20,3 +20,4 @@ https://archive.org/services/collection-rss.php?query=creator:Spirit_of_Revolt
 https://archive.org/services/collection-rss.php?query=creator:Davina_Thomson
 https://archive.org/services/collection-rss.php?query=creator:Do_or_Die_Collective
 https://archive.org/services/collection-rss.php?query=creator:Hackney_Peoples_Press
+https://archive.org/services/collection-rss.php?query=creator:CND_Campaign_for_Nuclear_Disarmament
