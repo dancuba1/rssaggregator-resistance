@@ -22,4 +22,4 @@ https://archive.org/services/collection-rss.php?query=creator:Do_or_Die_Collecti
 https://archive.org/services/collection-rss.php?query=creator:Hackney_Peoples_Press
 https://archive.org/services/collection-rss.php?query=creator:CND_Campaign_for_Nuclear_Disarmament
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3mBPNBLW0zdNNZ8eq9NeD-
-https://archive.org/services/collection-rss.php?query=creator:Mikaela+Loach
+https://archive.org/services/collection-rss.php?query=creator:Mikaela_Loach
