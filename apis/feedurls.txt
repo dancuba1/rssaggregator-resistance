@@ -23,4 +23,4 @@ https://archive.org/services/collection-rss.php?query=creator:Hackney_Peoples_Pr
 https://archive.org/services/collection-rss.php?query=creator:CND_Campaign_for_Nuclear_Disarmament
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3mBPNBLW0zdNNZ8eq9NeD-
 https://archive.org/services/collection-rss.php?query=creator:Mikaela_Loach
-https://www.flickr.com/services/feeds/photos_public.gne?id=85883701@N00&tags=squat&format=atom
+https://www.flickr.com/services/feeds/photos_public.gne?id=85883701@N00&tags=squat&format=rss2
