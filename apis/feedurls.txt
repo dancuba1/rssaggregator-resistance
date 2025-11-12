@@ -25,3 +25,5 @@ https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3mBPNBLW0zdNNZ8
 https://archive.org/services/collection-rss.php?query=creator:Mikaela_Loach
 https://www.flickr.com/services/feeds/photos_public.gne?id=85883701@N00&tags=squat&format=atom
 https://www.flickr.com/services/feeds/photos_public.gne?id=85883701@N00&tags=claremont_road&format=atom
+https://www.flickr.com/services/feeds/photos_public.gne?id=85883701@N00&tags=reclaim_the_streets&format=atom
+https://www.flickr.com/services/feeds/photos_public.gne?id=85883701@N00&tags=road_protest&format=atom
