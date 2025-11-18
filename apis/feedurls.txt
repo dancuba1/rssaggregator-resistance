@@ -29,3 +29,4 @@ https://www.flickr.com/services/feeds/photos_public.gne?id=85883701@N00&tags=rec
 https://www.flickr.com/services/feeds/photos_public.gne?id=85883701@N00&tags=roadprotest&format=atom
 https://archive.org/services/collection-rss.php?query=creator:No_M11_Link_Campaign
 https://archive.org/services/collection-rss.php?collection=fav-resistance_archive
+https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX1RxkrQZP3q2NZaAfMDdreH
