@@ -31,3 +31,5 @@ https://archive.org/services/collection-rss.php?query=creator:No_M11_Link_Campai
 https://archive.org/services/collection-rss.php?collection=fav-resistance_archive
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX1RxkrQZP3q2NZaAfMDdreH
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX2W4FvlaJXc6gL7RkFnJZPi
+https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX0RZzL1i55Vt4kiQdlzqUBY
+https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX2m4Ka81hGeQNJfPHApE7hb
