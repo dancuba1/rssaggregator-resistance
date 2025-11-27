@@ -48,3 +48,5 @@ https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX0HPNoEiTUExJhOc
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3aHvtMiPb_vE3Hm1CQxZ1e
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX1xXxA0l5Ga4UMhIgtXQAuK
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX2J8fRJVgUg39JqNHU-mW3h
+https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX2m3r5uQ2SESTqJHV3Pk7_1
+https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3Z18azUeRzDusNr3IpdjFz
