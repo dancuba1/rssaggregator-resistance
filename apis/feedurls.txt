@@ -50,3 +50,4 @@ https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX1xXxA0l5Ga4UMhI
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX2J8fRJVgUg39JqNHU-mW3h
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX2m3r5uQ2SESTqJHV3Pk7_1
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3Z18azUeRzDusNr3IpdjFz
+https://archive.org/services/collection-rss.php?query=creator:Stoke_Newington_8_Defence_Group
