@@ -53,3 +53,4 @@ https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3Z18azUeRzDusNr
 https://archive.org/services/collection-rss.php?query=creator:Stoke_Newington_8_Defence_Group
 https://archive.org/services/collection-rss.php?query=subject:"bwrap"
 https://archive.org/services/collection-rss.php?query=creator:ORA_Organisation_of_Revolutionary_Anarchists
+https://archive.org/services/collection-rss.php?query=subject:reclaim-the-streets-seven-sisters
