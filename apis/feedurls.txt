@@ -54,3 +54,4 @@ https://archive.org/services/collection-rss.php?query=creator:Stoke_Newington_8_
 https://archive.org/services/collection-rss.php?query=subject:"bwrap"
 https://archive.org/services/collection-rss.php?query=creator:ORA_Organisation_of_Revolutionary_Anarchists
 https://archive.org/details/reclaim-the-streets-seven-sisters/rss
+https://archive.org/services/collection-rss.php?query=creator:Peter_Marshall_photographer
