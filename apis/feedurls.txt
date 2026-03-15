@@ -55,6 +55,6 @@ https://archive.org/services/collection-rss.php?query=subject:"bwrap"
 https://archive.org/services/collection-rss.php?query=creator:ORA_Organisation_of_Revolutionary_Anarchists
 https://archive.org/details/reclaim-the-streets-seven-sisters/rss
 https://archive.org/advancedsearch.php?q=creator:Peter_Marshall_photographer%20AND%20-subject%3AIslamists&fl[]=identifier&fl[]=title&fl[]=description&fl[]=subject&fl[]=date&sort[]=addeddate%20desc&rows=50&page=1&output=rss
-http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&amp;set=72157694934074482&amp;lang=en-us&amp;format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157694934074482&lang=en-us&format=atom
 
 
