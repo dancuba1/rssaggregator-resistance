@@ -68,3 +68,4 @@ http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=7215766518
 http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157652507825513&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157651591288170&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157650544773557&lang=en-us&format=atom
+http://www.flickr.com/services/feeds/photos_public.gne?id=29727266%40N02&lang=en-us&tags=palestine&format=atom
