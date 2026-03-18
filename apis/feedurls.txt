@@ -56,5 +56,15 @@ https://archive.org/services/collection-rss.php?query=creator:ORA_Organisation_o
 https://archive.org/details/reclaim-the-streets-seven-sisters/rss
 https://archive.org/advancedsearch.php?q=creator:Peter_Marshall_photographer%20AND%20-subject%3AIslamists&fl[]=identifier&fl[]=title&fl[]=description&fl[]=subject&fl[]=date&sort[]=addeddate%20desc&rows=50&page=1&output=rss
 http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157694934074482&lang=en-us&format=atom
-
-
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157698567203904&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157698128692295&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157693758298142&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157686393509614&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157681037629445&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157672919352741&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157663859126793&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157665994911715&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157665185876285&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157652507825513&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157651591288170&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157650544773557&lang=en-us&format=atom
