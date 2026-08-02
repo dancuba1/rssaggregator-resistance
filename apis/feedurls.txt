@@ -71,5 +71,6 @@ http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=7215765054
 http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157693594333692&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157637150937735&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157668319751795&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157651714056465&lang=en-us&format=atom
 
 
