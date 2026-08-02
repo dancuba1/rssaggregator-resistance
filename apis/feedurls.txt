@@ -68,5 +68,6 @@ http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=7215766518
 http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157652507825513&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157651591288170&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157650544773557&lang=en-us&format=atom
-http://flickr.com/services/feeds/photoset.gne?nsid=40899634%40N00&set=72157638419357093&lang=en-us&format=atom
-http://flickr.com/services/feeds/photos_public.gne?id=40899634@N00&tags=stonehenge&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157693594333692&lang=en-us&format=atom
+
+
