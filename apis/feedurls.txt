@@ -69,5 +69,6 @@ http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=7215765250
 http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157651591288170&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=78729786%40N05&set=72157650544773557&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157693594333692&lang=en-us&format=atom
-http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157638419357093&lang=en-us&format=atom
+http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157637150937735&lang=en-us&format=atom
+
 
