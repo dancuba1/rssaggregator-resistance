@@ -72,7 +72,7 @@ http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=721576935943
 http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157637150937735&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157668319751795&lang=en-us&format=atom
 http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=72157651714056465&lang=en-us&format=atom
-https://archive.org/advancedsearch.php?q=collection:sparrowsnestlibrary&fl[]=identifier&sort[]=&sort[]=&sort[]=&rows=2500&page=1&callback=callback&save=yes&output=rss
-https://archive.org/advancedsearch.php?q=collection:sparrowsnestlibrary&fl[]=identifier&sort[]=&sort[]=&sort[]=&rows=2500&page=2&callback=callback&save=yes&output=rss
+https://archive.org/advancedsearch.php?q=collection:sparrowsnestlibrary&fl[]=identifier&sort[]=&sort[]=&sort[]=&rows=4212&page=1&callback=callback&save=yes&output=rss
+
 
 
