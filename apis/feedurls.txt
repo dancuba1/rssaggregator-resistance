@@ -1,6 +1,6 @@
 https://archive.org/services/collection-rss.php?collection=resistancearchive
 https://archive.org/services/collection-rss.php?collection=ingabystramstrikingart
-https://archive.org/services/collection-rss.php?query=subject:Chiara_Contrino
+https://archive.org/services/collection-rss.php?query=subject%3AChiara_Contrino%20AND%20NOT%20subject%3Ahamas
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX3iLGuSVVeri7ZEfud_j-su
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX0PzadF1L72XBw8mLpejzrY
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX21XJ7pjAWCaJKThHXOWPjb
