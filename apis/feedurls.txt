@@ -74,7 +74,7 @@ http://flickr.com/services/feeds/photoset.gne?nsid=40899634@N00&set=721576517140
 https://archive.org/advancedsearch.php?q=collection:sparrowsnestlibrary&fl[]=identifier&sort[]=&sort[]=&sort[]=&rows=4212&page=1&callback=callback&save=yes&output=rss
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX0HPNoEiTUExJhOcTP-n5WX
 https://www.flickr.com/services/feeds/photos_public.gne?id=162063214@N07&tags=blacklivesmatter,notoracism,activist&tagmode=any&format=atom
-https://www.flickr.com/services/feeds/photos_public.gne?id=162063214@N07&tags=gaza&tagmode=any&format=atom
+https://www.flickr.com/services/feeds/photos_public.gne?id=162063214@N07&tags=gaza&format=atom
 https://www.flickr.com/services/feeds/photos_public.gne?id=162063214@N07&tags=palestine&format=atom
 https://www.flickr.com/services/feeds/photos_public.gne?id=162063214@N07&tags=womens&format=atom
 https://www.flickr.com/services/feeds/photos_public.gne?id=162063214@N07&tags=strike&format=atom
