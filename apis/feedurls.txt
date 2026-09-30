@@ -81,4 +81,6 @@ https://www.flickr.com/services/feeds/photoset.gne?nsid=69163004@N00&set=7215771
 https://www.flickr.com/services/feeds/photoset.gne?nsid=69163004@N00&set=72157719309228546&lang=en-us&format=atom
 https://www.flickr.com/services/feeds/photoset.gne?nsid=69163004@N00&set=72157719269917373&lang=en-us&format=atom
 https://www.flickr.com/services/feeds/photoset.gne?nsid=69163004@N00&set=72157719157294024&lang=en-us&format=atom
+https://www.flickr.com/services/feeds/photoset.gne?nsid=69163004@N00&set=72157719161293604&lang=en-us&format=atom
+
 
