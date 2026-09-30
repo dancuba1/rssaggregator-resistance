@@ -75,4 +75,5 @@ https://archive.org/advancedsearch.php?q=collection:sparrowsnestlibrary&fl[]=ide
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLmEoLllcfuX0HPNoEiTUExJhOcTP-n5WX
 https://www.flickr.com/services/feeds/photos_public.gne?id=162063214@N07&tags=blacklivesmatter,notoracism,activist&tagmode=any&format=atom
 https://www.flickr.com/services/feeds/photoset.gne?nsid=69163004@N00&set=72157719072835707&lang=en-us&format=atom
+https://www.flickr.com/services/feeds/photoset.gne?nsid=69163004@N00&set=72157715646249367&lang=en-us&format=atom
 
